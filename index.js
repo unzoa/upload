@@ -1,7 +1,7 @@
-import upload from './upload.vue'
+import Upload from './Upload.vue'
 
-upload.install = vue => {
-  vue.components(upload.name, upload)
+Upload.install = vue => {
+  vue.components(Upload.name, Upload)
 }
 
-export default upload
+export default Upload

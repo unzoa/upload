@@ -1,5 +1,9 @@
 <template>
-  <div class="upload-container" ref="updWrapper">
+  <div
+    ref="updWrapper"
+    class="upload-container"
+    style="width: 100%; height: 100%;"
+    >
     <form ref="formContainer">
       <input
         ref="fileInput"
@@ -8,38 +12,33 @@
         :webkitdirectory="webkitdirectory"
         :multiple="multiple"
         @change="change($event)">
-
-      <slot></slot>
     </form>
+
+    <slot></slot>
   </div>
 </template>
 
 <script>
 /* eslint-disable */
-
 import Axios from 'axios'
+
+function upload (Interface, formData, config) {
+  return new Promise(resolve => {
+    Axios.post(Interface, formData, config)
+      .then(res => resolve(res) )
+      .catch(res => resolve(res) )
+  })
+}
+
 export default {
   name: 'upload-component',
 
   props: {
+    // 必须
     url: String,
-    size: Number,
-    limitNum: Number,
-    accept: String,
 
-    webkitdirectory: { type: Boolean, default: false },
-    multiple: { type: Boolean, default: false },
-
-    drag: { type: Boolean, default: false },
-    beforeDrag: {
-      type: Function
-    },
-
-    filter: {
-      type: Function
-    },
-
-    fileKey: { default: 'file', type: String },
+    // 自动上传
+    autoUpload: Boolean,
 
     data: {
       type: Object,
@@ -48,7 +47,23 @@ export default {
       }
     },
 
-    autoUpload: { type: Boolean, default: false }
+    // 过滤
+    limit: Number,
+    size: Number,
+    accept: String,
+    // 更多过滤
+    filter: Function,
+
+    // 多文件 or 文件夹
+    webkitdirectory: Boolean,
+    multiple: Boolean,
+
+    // 拖拽
+    drag: Boolean,
+    beforeDrag: Function,
+
+    // 如果api接收文件的key不是file
+    fileKey: { type: String, default: 'file'  },
   },
 
   data () {
@@ -64,116 +79,158 @@ export default {
     },
 
     change (e) {
-      let files = e.target.files
-
-      if (files.length) {
-        this.$emit('btnDisabled', true)
-      }
-
-      if (files.length === 1) {
-        this.$emit('single-file', files[0])
-      }
-
+      const files = e.target.files
       this.transFiles(files)
     },
 
     limitNumEvent (files) {
-      if (files.length > this.limitNum) {
-        this.$emit('limitError')
+      if (!this.limit) return false
+
+      if (files.length > this.limit) {
+        this.$emit('on-limit-error')
         return false
       }
     },
 
-    transFiles (files) {
-      // 当传了限制文件数量 limitNum 才执行limitNumEvent
-      if (this.limitNum && this.limitNumEvent(files) === false) {
-        return false
-      }
+    dragger () {
+      if (!this.drag) return false
 
-      let failFiles = [] // 不通过size和格式过滤的文件
-      files = Array.from(files).filter(file => {
-        let sizeBol = this.size ? file.size <= this.size : true
-        let acceptBol = this.accept ? this.accept.includes((file.name.split('.').reverse()[0]).toLowerCase()) : true
+      document.addEventListener('drop', function (e) { // 拖离
+        e.preventDefault()
+      })
+      document.addEventListener('dragleave', function (e) { // 拖后放
+        e.preventDefault()
+      })
+      document.addEventListener('dragenter', function (e) { // 拖进
+        e.preventDefault()
+      })
+      document.addEventListener('dragover', function (e) { // 拖来拖去
+        e.preventDefault()
+      })
+
+
+      const dom = this.$refs.updWrapper // document.querySelector('.upload-container')
+
+      dom.addEventListener('dragover', e => {
+        e.stopPropagation()
+        e.preventDefault()
+        e.dataTransfer.dropEffect = 'copy'
+      })
+
+      dom.addEventListener('drop', e => {
+        e.stopPropagation()
+        e.preventDefault()
+
+        const files = Array.from(e.dataTransfer.files)
+
+        if (this.limitNumEvent(files) === false) return false
+
+        this.beforeDrag
+          ? this.beforeDrag( () => this.transFiles(files) )
+          : this.transFiles(files)
+      })
+    },
+
+    transFiles (files) {
+      if (this.limitNumEvent(files) === false) return false
+
+
+      // 不通过 size和格式 过滤的文件
+      let failList = []
+      const filesFilter = Array.from(files).filter(file => {
+        const sizeBol = this.size
+          ? file.size <= this.size
+          : true
+
+        const acceptBol = this.accept
+          ? this.accept.includes((file.name.split('.').reverse()[0]).toLowerCase())
+          : true
 
         let failText = ''
         switch (true) {
-          case !(sizeBol || acceptBol):
-            failText = '文件过大且格式不正确'
-            break
-
+          case !(sizeBol || acceptBol): failText = '文件过大且格式不正确'; break
           case !sizeBol: failText = '文件过大'; break
           case !acceptBol: failText = '文件格式不正确'; break
         }
-        !(sizeBol && acceptBol) && failFiles.push([file.name, failText])
+
+        !(sizeBol && acceptBol) && failList.push({
+          file_name: file.name,
+          message: failText
+        })
+
         return sizeBol && acceptBol
       })
-      if (failFiles.length) {
-        this.$emit(
-          'failFiles',
-          failFiles.length > 1
-            ? failFiles
-            : {
-              message: failFiles[0].join(': '),
-              status: 400
-            }
-        )
-      }
 
-      this.filterSuccessList = this.filter ? this.filter(files) : files
+      // 更多过滤
+      const filterSuccessList = this.filter ? this.filter(filesFilter, failList) : filesFilter
 
-      this.count = this.filterSuccessList.length
+      // 通知：不通过过滤的文件
+      if (failList.length) this.$emit('fail-list', failList)
 
-      if (this.count === 0) {
-        this.$emit('end', true)
+      if (filterSuccessList.length === 0) {
+        this.$emit('on-switch', false)
         return false
       }
 
+
+      // 准备进入上传列队
+      this.filterSuccessList = filterSuccessList
+      this.count = filterSuccessList.length
+      this.$emit('on-total', this.count)
+
+
       // 用于页面展示选中的图片
-      this.fileToBase64(this.filterSuccessList)
+      const that = this
+      function fileToBase64 (filelist) {
+        filelist
+          .filter(file => {
+            return file.type.includes('image')
+          })
+          .forEach(file => {
+            var fr = new FileReader()
+            fr.readAsDataURL(file)
+            fr.onloadend = function (e) {
+              that.$emit('on-img-preview', e.target.result)
+            }
+          })
+      }
+      fileToBase64(this.filterSuccessList)
+
 
       // 清空form
       this.$refs.formContainer.reset()
+
 
       // 或开始上传
       this.autoUpload && this.submit()
     },
 
-    fileToBase64 (file) {
-      let that = this
-      file.forEach(res => {
-        var fr = new FileReader()
-        fr.readAsDataURL(res)
-        fr.onloadend = function (e) {
-          that.$emit('showImg', e.target.result)
-        }
-      })
-    },
-
+    // 异步任务
     submit () {
-      this.$emit('start', true)
+      // 通知：队列开始
+      this.$emit('on-switch', true)
 
-      this.count = this.filterSuccessList.length
 
-      this.filterSuccessList.forEach((file, index) => {
-        let fd = new FormData()
+      // 开始异步上传任务
+      this.filterSuccessList.forEach(file => {
+        const fd = new FormData()
         fd.append(this.fileKey, file)
 
-        Object.entries(this.data).forEach(val => {
-          fd.append(val[0], val[1])
+        Object.entries(this.data).forEach(([k, v]) => {
+          fd.append(k, JSON.stringify(v))
         })
 
         this.uploadAct(fd)
       })
     },
 
+    // 同步任务列队：单个任务完成后，才进行下一个任务
     async syncSubmit () {
-      let file = this.filterSuccessList[0]
+      const file = this.filterSuccessList[0]
 
-      if (!file) {
-        return false
-      }
+      if (!file) return false
 
-      let fd = new FormData()
+      const fd = new FormData()
       fd.append(this.fileKey, file)
 
       Object.entries(this.data).forEach(val => {
@@ -187,77 +244,29 @@ export default {
       this.syncSubmit()
     },
 
-    uploadAct (formData) {
-      let fileName = formData.get(this.fileKey).name
+    async uploadAct (formData) {
+      const fileName = formData.get(this.fileKey).name
 
-      let config = {
+      const config = {
         onUploadProgress: progressEvent => {
-          let complete = (progressEvent.loaded / progressEvent.total * 100 | 0)
+          const complete = (progressEvent.loaded / progressEvent.total * 100 | 0)
 
-          this.$emit('progress', Number(complete), fileName) // 通知父组件完成进度
+          // 通知: 完成进度
+          this.$emit('on-progress', Number(complete), fileName)
         }
       }
 
-      return this.upload(this.url, formData, config)
+      return upload(this.url, formData, config)
         .then(res => {
-          this.$emit('uploadFinnal', res, fileName) // 通知父组件完成
+          // 通知: 完成一个
+          this.$emit('on-success', res, fileName)
 
           this.count--
-          this.count === 0 && this.$emit('end', true)
+          this.$emit('on-count', this.count)
+
+          // 通知：全部完成
+          this.count === 0 && this.$emit('on-switch', false)
         })
-    },
-
-    upload (Interface, formData, config) {
-      return new Promise(resolve => {
-        Axios.post(Interface, formData, config)
-          .then(res => {
-            resolve(res)
-          }).catch(res => {
-            resolve(res)
-          })
-      })
-    },
-
-    dragger () {
-      if (this.drag) {
-        document.addEventListener('drop', function (e) { // 拖离
-          e.preventDefault()
-        })
-        document.addEventListener('dragleave', function (e) { // 拖后放
-          e.preventDefault()
-        })
-        document.addEventListener('dragenter', function (e) { // 拖进
-          e.preventDefault()
-        })
-        document.addEventListener('dragover', function (e) { // 拖来拖去
-          e.preventDefault()
-        })
-
-        let dom = this.$refs.updWrapper // document.querySelector('.upload-container')
-
-        dom.addEventListener('dragover', e => {
-          e.stopPropagation()
-          e.preventDefault()
-          e.dataTransfer.dropEffect = 'copy'
-        })
-
-        dom.addEventListener('drop', e => {
-          e.stopPropagation()
-          e.preventDefault()
-
-          var files = Array.from(e.dataTransfer.files)
-
-          if (this.limitNum && this.limitNumEvent(files) === false) {
-            return false
-          }
-
-          this.beforeDrag
-            ? this.beforeDrag(() => {
-              this.transFiles(files)
-            })
-            : this.transFiles(files)
-        })
-      }
     }
   },
 
