@@ -3,6 +3,12 @@
 > 上传文件，图片，图片预览，多文件，文件夹
 > 利用input type=“file”上传，依赖axios模块
 
+## 安装
+
+```bash
+npm i @unzoa/upload
+```
+
 ## 功能
 
 ```
@@ -28,6 +34,8 @@
 ```
 
 ## 使用
+
+> [sample.vue](https://github.com/unzoa/upload/blob/main/Sample.vue)
 
 ```js
   click: function, // 执行input type=“file”的点击

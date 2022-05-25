@@ -1,6 +1,7 @@
 {
-  "name": "upload",
+  "name": "@unzoa/upload",
   "version": "1.0.0",
+  "private": false,
   "description": "> 上传文件，图片，图片预览，多文件，文件夹, 利用input type=“file”上传，依赖axios模块",
   "main": "index.js",
   "scripts": {
@@ -10,8 +11,8 @@
     "type": "git",
     "url": "git+https://github.com/unzoa/upload.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["vue", "upload", "axios"],
+  "author": "unzoa",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/unzoa/upload/issues"
@@ -19,5 +20,11 @@
   "homepage": "https://github.com/unzoa/upload#readme",
   "devDependencies": {
     "axios": "^0.22.0"
-  }
+  },
+  "files": [
+    "index.js",
+    "README.md",
+    "Upload.vue",
+    "package.json"
+  ]
 }
