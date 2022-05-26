@@ -3,7 +3,7 @@
     <div class="upd-wrapper">
       <Upload
         ref="test"
-        url="https://taishi.roarpanda.com:9800/api/sample_upload/"
+        url="https://xxxx.com/api/upload/"
         drag
         autoUpload
         multiple
@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import Upload from '../lib-525/packages/upload'
+import Upload from 'Upload.vue'
 
 export default {
   name: 'upload-sample',

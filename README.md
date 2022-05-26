@@ -1,12 +1,30 @@
-# upload
+# vue-upload-calc
 
-> 上传文件，图片，图片预览，多文件，文件夹
-> 利用input type=“file”上传，依赖axios模块
+> 上传文件 图片 图片预览 多文件 文件夹。接收多参数，多种计算回调，**不提供UI显示**，需要您根据回调自行发挥。这里准备一个案例 [sample.vue](https://github.com/unzoa/upload/blob/main/Sample.vue)
 
 ## 安装
 
 ```bash
-npm i @unzoa/upload
+npm i vue-upload-calc
+```
+
+## 使用
+
+> **不提供UI显示**，需要您根据回调自行发挥。案例 [sample.vue](https://github.com/unzoa/upload/blob/main/Sample.vue)
+
+```js
+  <Upload ref="updComponentRef" url="" props emit>
+    // 您自己的UI，也可以不在插槽这里写
+
+    // 执行input type=“file”的点击
+    button this.$refs.updComponentRef.click()
+
+    // 执行异步上传
+    button this.$refs.updComponentRef.submit()
+
+    // 执行同步上传
+    button this.$refs.updComponentRef.syncSubmit()
+  </Upload>
 ```
 
 ## 功能
@@ -33,29 +51,11 @@ npm i @unzoa/upload
 - 图片预览
 ```
 
-## 使用
-
-> [sample.vue](https://github.com/unzoa/upload/blob/main/Sample.vue)
-
-```js
-  click: function, // 执行input type=“file”的点击
-  // 使用案例：
-  this.$refs.yourRef.click()
-
-  submit: function, // 开始执行上传事件
-  // 使用案例：
-  this.$refs.yourRef.submit()
-
-  syncSubmit: function, // 开始执行同步上传事件
-  // 使用案例：
-  this.$refs.yourRef.syncSubmit()
-```
-
 ## props
 
 参数|说明|类型|默认值|可选值
 :---|:---|:---|:---|:---
-url| 用了axios，需要在拦截中配置 | String | - | apiName/fullpath
+url| 用了axios，如您有拦截，则自行配置 | String | - | apiName/fullpath
 autoUpload| 是否自动上传 | Boolean | false | true
 data| 携带参数 | Object | {} | -
 limit| 限制个数 | Number | - | -
@@ -74,7 +74,7 @@ fileKey| 上传文件的key | String | file | -
 
 参数|说明|类型|参数格式
 :---|:---|:---|:---
-on-switch|上传任务开关|function(Boolean)| true:开始，false：结束
+on-switch|上传队列任务的开始/结束|function(Boolean)| true:开始，false：结束
 on-progress|单个文件上传进度|function(progressNumber, fileName)|(0~100, '文件名')
 on-success|单个文件上传结束|function(response, fileName)|(ajax_body, '文件名')
 on-limit-error|上传文件个数超过限制，并阻止上传|function(Boolean)| false
