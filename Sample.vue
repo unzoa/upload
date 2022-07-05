@@ -1,11 +1,14 @@
 <template>
   <div class="upload-sample">
-    <div class="upd-wrapper">
+    <!-- upd-wrapper 为了给drag留的高度容器，没有drag可以不用 -->
+    <!-- <div class="upd-wrapper"> -->
       <Upload
         ref="test"
-        url="https://xxxx.com/api/upload/"
-        drag
+        url="https://taishi.roarpanda.com:9800/api/sample_upload/"
         autoUpload
+        >
+        <!--
+        drag
         multiple
         webkitdirectory
         :data="{
@@ -20,11 +23,11 @@
         @on-switch="switchEvent"
         @on-total="totalNum"
         @on-count="countNum"
-        >
+        > -->
+      </Upload>
         <button @click="$refs.test.click()">upload</button> |
         <button @click="$refs.test.submit()">sub</button>
-      </Upload>
-    </div>
+    <!-- </div> -->
 
     <div class="__aa">
       <p>loading: {{loading}}</p>

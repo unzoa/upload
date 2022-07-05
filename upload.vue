@@ -31,7 +31,7 @@ function upload (Interface, formData, config) {
 }
 
 export default {
-  name: 'upload-component',
+  name: 'Upload',
 
   props: {
     // 必须
@@ -83,12 +83,22 @@ export default {
       this.transFiles(files)
     },
 
-    limitNumEvent (files) {
-      if (!this.limit) return false
+    /**
+     * 判断是否通过数量限制
+     * return
+     * true 允许进行下一步
+     * false 超过限制
+     * */
+    passLimitNum (files) {
+      // 未限制
+      if (!this.limit) return true
 
+      // 根据限制数量进行判断
       if (files.length > this.limit) {
         this.$emit('on-limit-error')
         return false
+      } else {
+        return true
       }
     },
 
@@ -109,7 +119,7 @@ export default {
       })
 
 
-      const dom = this.$refs.updWrapper // document.querySelector('.upload-container')
+      const dom = this.$refs.updWrapper
 
       dom.addEventListener('dragover', e => {
         e.stopPropagation()
@@ -123,7 +133,7 @@ export default {
 
         const files = Array.from(e.dataTransfer.files)
 
-        if (this.limitNumEvent(files) === false) return false
+        if (this.passLimitNum(files) === false) return false
 
         this.beforeDrag
           ? this.beforeDrag( () => this.transFiles(files) )
@@ -132,7 +142,7 @@ export default {
     },
 
     transFiles (files) {
-      if (this.limitNumEvent(files) === false) return false
+      if (this.passLimitNum(files) === false) return false
 
 
       // 不通过 size和格式 过滤的文件

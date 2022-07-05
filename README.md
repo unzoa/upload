@@ -1,6 +1,6 @@
 # vue-upload-calc
 
-> 上传文件 图片 图片预览 多文件 文件夹。接收多参数，多种计算回调，**不提供UI显示**，需要您根据回调自行发挥。这里准备一个案例 [sample.vue](https://github.com/unzoa/upload/blob/main/Sample.vue)
+> 上传文件 图片 图片预览 多文件 文件夹。接收多参数，多种计算回调，**不提供UI显示**，需要您根据回调自行发挥。这里准备一个案例 [Sample.vue](https://github.com/unzoa/upload/blob/main/Sample.vue)
 
 ## 安装
 
@@ -10,19 +10,23 @@ npm i vue-upload-calc
 
 ## 使用
 
-> **不提供UI显示**，需要您根据回调自行发挥。案例 [sample.vue](https://github.com/unzoa/upload/blob/main/Sample.vue)
+> **不提供UI显示**，需要您根据回调自行发挥。案例 [Sample.vue](https://github.com/unzoa/upload/blob/main/Sample.vue)
+
+插槽里是您自己的UI，如果没有拖拽功能，**也可以不在插槽这里写**
 
 ```js
-  <Upload ref="updComponentRef" url="" props emit>
-    // 您自己的UI，也可以不在插槽这里写
-
+  <Upload
+    ref="updComponentRef"
+    url=""
+    autoUpload
+    >
     // 执行input type=“file”的点击
     button this.$refs.updComponentRef.click()
 
-    // 执行异步上传
+    // 配置autoUpload，默认执行异步上传
     button this.$refs.updComponentRef.submit()
 
-    // 执行同步上传
+    // 配置autoUpload=false, 再执行同步上传
     button this.$refs.updComponentRef.syncSubmit()
   </Upload>
 ```
