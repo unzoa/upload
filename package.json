@@ -1,12 +1,12 @@
 {
-  "name": "vue-upload-calc",
-  "version": "1.0.1",
+  "name": "upload-calc",
+  "version": "1.0.2",
   "private": false,
   "publishConfig": {
     "access": "public"
   },
   "description": "上传文件 图片 图片预览 多文件 文件夹等。接收多参数，多种计算回调，**不提供UI显示**，需要您根据回调自行发挥。",
-  "main": "index.js",
+  "main": "upload.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -14,20 +14,17 @@
     "type": "git",
     "url": "git+https://github.com/unzoa/upload.git"
   },
-  "keywords": ["vue", "upload", "axios", "webkitdirectory", "multiple", "drag", "task", "fail", "success", "preview", "progress"],
+  "keywords": ["upload", "webkitdirectory", "multiple", "drag", "fail", "success", "preview", "progress"],
   "author": "unzoa",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/unzoa/upload/issues"
   },
-  "homepage": "https://github.com/unzoa/upload#readme",
-  "dependencies": {
-    "axios": "^0.22.0"
-  },
+  "homepage": "https://github.com/unzoa/upload/tree/upload-calc",
   "files": [
-    "index.js",
+    "upload.ts",
+    "upload-type.ts",
     "README.md",
-    "Upload.vue",
     "package.json"
   ]
 }
