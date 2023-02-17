@@ -1,54 +1,35 @@
 /**
  * @author yuhongyu
- * @time 2023-02-15
+ * @time 2023-02-17
  */
 
-// 只提供files的计算和上传
-// 接收参数：url,params,limit,size,accept
-// 回调：
-// filter：function 更多过滤条件
-// beforeDrag：拦截拖拽释放
-
-// 对外接口：
-// click
-// change
-
-
-import type {
-  InputDom,
-  Files,
-  FilesArr,
-  FilesMessagelist,
-  Callback, Options
-} from './upload-type'
-
 export default class Upload {
-  filterSuccessList: FilesArr = []
-  count: number = -1
-  fileKey: string = 'file'
+  filterSuccessList = []
+  count = -1
+  fileKey = 'file'
 
-  inputDom: InputDom = null
-  webkitdirectory: boolean = false // 文件夹
-  multiple: boolean = false // 多文件
-  accept: string = '' // 接收格式
+  inputDom = null
+  webkitdirectory = false // 文件夹
+  multiple = false // 多文件
+  accept = '' // 接收格式
 
-  constructor(
-    public id: string,
-    public url?: string,
-    public options: Options = {} as Options,
-    public cb: Callback = {} as Callback
-  ) {
+  constructor( id, url, options = {}, cb = {} ) {
+    this.id = id
+    this.url = url
+    this.options = options
+    this.cb = cb
+
     this.init()
     this.options.dragAble && this.dragger()
   }
 
   init() {
-    this.inputDom = document.getElementById(this.id) as InputDom
+    this.inputDom = document.getElementById(this.id)
     const {
       webkitdirectory,
       multiple,
       accept,
-    }: any = this.inputDom?.attributes
+    } = this.inputDom?.attributes
 
     this.webkitdirectory = webkitdirectory?.value === 'true' || webkitdirectory?.value === ''
     this.multiple = multiple?.value === 'true' || multiple?.value === ''
@@ -59,17 +40,17 @@ export default class Upload {
     this.inputDom?.click()
   }
 
-  change(e: Event) {
-    const files: Files = (e.target as HTMLInputElement).files
+  change(e) {
+    const files = e.target.files
     this.transFiles(files)
   }
 
-  transFiles(files: Files) {
+  transFiles(files) {
     if (!this.accessLimitNum(files)) return false
 
     // 不通过 size和格式 过滤的文件
-    let failMessageList: FilesMessagelist = []
-    const filesFilter: FilesArr = files && Array.from(files).filter(file => {
+    let failMessageList = []
+    const filesFilter = files && Array.from(files).filter(file => {
       const sizeBol = this.options.size
         ? file.size <= this.options.size
         : true
@@ -100,7 +81,7 @@ export default class Upload {
     if (failMessageList.length) this.cb.failMessageList && this.cb.failMessageList(failMessageList)
 
     if (filterSuccessList?.length === 0) {
-      this.cb.onSwitch!(false)
+      this.cb.onSwitch && this.cb.onSwitch(false)
       return false
     }
 
@@ -111,7 +92,7 @@ export default class Upload {
 
     // 用于页面展示选中的图片
     const that = this
-    function fileToBase64(filelist: FilesArr) {
+    function fileToBase64(filelist) {
       filelist &&
       filelist
         .filter(file => {
@@ -120,8 +101,8 @@ export default class Upload {
         .forEach((file) => {
           var fr = new FileReader()
           fr.readAsDataURL(file)
-          fr.onloadend = function (e: Event) {
-            that.cb.onImgPreview && that.cb.onImgPreview((e.target as FileReader).result)
+          fr.onloadend = function (e) {
+            that.cb.onImgPreview && that.cb.onImgPreview(e.target.result)
           }
         })
     }
@@ -129,18 +110,18 @@ export default class Upload {
     fileToBase64(this.filterSuccessList);
 
     // 清空form
-    (this.inputDom?.parentElement as HTMLFormElement).reset()
+    this.inputDom?.parentElement.reset()
 
     // 或开始上传
     this.options.autoUpload && this.submit()
   }
 
-  accessLimitNum(files: Files) {
+  accessLimitNum(files) {
     // 无限制
     if (this.options.limit === undefined) return true
 
     // 上传文件数量 大于 限制数量
-    if (files?.length! > this.options.limit) {
+    if (files?.length > this.options.limit) {
       this.cb.onAccessLimitNum && this.cb.onAccessLimitNum(false)
       return false
     }
@@ -188,13 +169,26 @@ export default class Upload {
     this.syncSubmit()
   }
 
-  uploadEvent(formData: FormData) {
+  fetchEvent (formData) {
+    return fetch(this.url, {
+      method: "POST",
+      body: formData
+    })
+      .then(fetchProgress({
+        // implement onProgress method
+        onProgress(progress) {
+          console.log(progress)
+        },
+      }))
+  }
+
+  uploadEvent (formData) {
     const that = this
-    const fileName: FormDataEntryValue | null = formData && (formData.get(this.fileKey) as File).name
+    const fileName = formData && formData.get(this.fileKey).name
 
     return new Promise((resolve, reject) => {
       let request = new XMLHttpRequest()
-      request.open('POST', that.url!)
+      request.open('POST', that.url)
 
       request.upload.addEventListener('progress', function (e) {
         let percent_completed = (e.loaded / e.total) * 100
@@ -227,16 +221,16 @@ export default class Upload {
   }
 
   dragger () {
-    document.addEventListener('drop', function (e: any) { // 拖离
+    document.addEventListener('drop', function (e) { // 拖离
       e.preventDefault()
     })
-    document.addEventListener('dragleave', function (e: any) { // 拖后放
+    document.addEventListener('dragleave', function (e) { // 拖后放
       e.preventDefault()
     })
-    document.addEventListener('dragenter', function (e: any) { // 拖进
+    document.addEventListener('dragenter', function (e) { // 拖进
       e.preventDefault()
     })
-    document.addEventListener('dragover', function (e: any) { // 拖来拖去
+    document.addEventListener('dragover', function (e) { // 拖来拖去
       e.preventDefault()
     })
 
@@ -244,17 +238,17 @@ export default class Upload {
     const dom = document.querySelector('#' + this.options.dragWrapperId)
     if (!dom) return
 
-    dom.addEventListener('dragover', (e: any) => {
+    dom.addEventListener('dragover', (e) => {
       e.stopPropagation()
       e.preventDefault()
       e.dataTransfer.dropEffect = 'copy'
     })
 
-    dom.addEventListener('drop', (e: any) => {
+    dom.addEventListener('drop', (e) => {
       e.stopPropagation()
       e.preventDefault()
 
-      const files: Files = e.dataTransfer.files
+      const files = e.dataTransfer.files
 
       if (this.accessLimitNum(files) === false) return false
 

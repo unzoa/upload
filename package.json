@@ -1,12 +1,13 @@
 {
   "name": "upload-calc",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": false,
   "publishConfig": {
     "access": "public"
   },
   "description": "上传文件 图片 图片预览 多文件 文件夹等。接收多参数，多种计算回调，**不提供UI显示**，需要您根据回调自行发挥。",
-  "main": "upload.ts",
+  "main": "index.js",
+  "typings": "index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -22,8 +23,9 @@
   },
   "homepage": "https://github.com/unzoa/upload/tree/upload-calc",
   "files": [
-    "upload.ts",
-    "upload-type.ts",
+    "index.d.ts",
+    "index.js",
+    "upload.js",
     "README.md",
     "package.json"
   ]
